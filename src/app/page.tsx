@@ -1,101 +1,131 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
 
+const Cities = [
+  {
+    city: "New York",
+    lat: 40.7128,
+    lon: -74.0060,
+  },
+  {
+    city: "Los Angeles",
+    lat: 34.0522,
+    lon: -118.2437,
+  },
+  {
+    city: "Chicago",
+    lat: 41.8781,
+    lon: -87.6298,
+  },
+  {
+    city: "Houston",
+    lat: 29.7604,
+    lon: -95.3698,
+  }
+];
+
+// Weather search app
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [inputValue, setInputValue] = useState("");
+  const [suggestions, setSuggestions] = useState<{city: string, lat: number, lon: number}[]>([]);
+  const [weatherForecasts, setWeatherForecasts] = useState<{cityName: string, periods: {time: string, temperature: number, detailedForecast: string}[]}[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const makeSuggestions = async () => {
+    const filteredCities = Cities.filter(city => city.city.toLowerCase().includes(inputValue.toLowerCase()));
+    setSuggestions(filteredCities);
+  };
+
+  const fetchWeather = async (city: string, lat: number, lon: number) => {
+    const response = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
+    const data = await response.json();
+    const forecastUrl = data.properties.forecast;
+
+    // Fetch forecast data
+    const forecastResponse = await fetch(forecastUrl);
+    const {properties} = await forecastResponse.json();
+    
+    const periods = properties.periods.map((period: {[key: string]: string | number}) => { 
+      return {
+        time: period.name,
+        temperature: period.temperature,
+        detailedForecast: period.detailedForecast,
+      };
+    });
+
+    setWeatherForecasts([...weatherForecasts, {cityName: city, periods}]);
+  };
+
+  useEffect(() => {
+    if(inputValue.length <= 0) {
+      setSuggestions(Cities);
+      return;
+    } else {
+      makeSuggestions();
+    }
+  }, [inputValue]);
+
+  return (
+    <div className="bg-gray-200 h-screen flex flex-col justify-center">
+      <nav className="bg-blue-500 p-4 flex justify-center items-center absolute w-full top-0">
+        <div className="container mx-auto flex items-center">
+          <div className="text-white text-lg font-bold">
+            WeatherApp
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </nav>
+
+      <h1 className="text-4xl text-center mt-4 font-bold">
+        Weather Search
+      </h1>
+
+      <input 
+        type="text"
+        className="w-1/2 mx-auto mt-4 p-2 border rounded-s"
+        placeholder="Enter city name"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+      />
+      
+      {
+        suggestions.length > 0 && (
+          <div className="w-1/2 mx-auto mt-4">
+            {
+              suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className="bg-white p-2 border rounded-s mt-2 cursor-pointer"
+                  onClick={async () => await fetchWeather(suggestion.city, suggestion.lat, suggestion.lon)}
+                >
+                  <h1>{suggestion.city}</h1>
+                </div>
+              ))
+            }
+          </div>
+        )
+      }
+
+      {
+        weatherForecasts.length > 0 && (
+            <div className="w-full mx-auto mt-4 overflow-x-auto flex flex-row">
+            {
+              weatherForecasts.map((city, index) => (
+                <div key={index} className="bg-white p-2 border rounded-s mt-2 overflow-y-auto max-h-64 w-1/4 mx-2">
+                    <h1 className="text-2xl font-bold">{city.cityName}</h1>
+                  {
+                    city.periods.map((period, index) => (
+                        <div key={index} className="mt-2"> 
+                            <h1 className="underline">{period.time}</h1>
+                          <h1>{period.temperature}*F</h1>
+                          <p>{period.detailedForecast}</p>
+                        </div>
+                    ))
+                  }
+                </div>
+              ))
+            }
+          </div>
+        )
+      }
     </div>
   );
 }
