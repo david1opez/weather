@@ -110,11 +110,19 @@ export default function Home() {
             {
               weatherForecasts.map((city, index) => (
                 <div key={index} className="bg-white p-2 border rounded-s mt-2 overflow-y-auto max-h-64 w-1/4 mx-2">
+                  <button 
+                    className="float-right text-red-500 font-bold"
+                    onClick={() => setWeatherForecasts(weatherForecasts.filter((_, i) => i !== index))}
+                  >
+                    X
+                  </button>
                     <h1 className="text-2xl font-bold">{city.cityName}</h1>
                   {
                     city.periods.map((period, index) => (
                         <div key={index} className="mt-2"> 
-                            <h1 className="underline">{period.time}</h1>
+                          {/* remove button */}
+                          
+                          <h1 className="underline">{period.time}</h1>
                           <h1>{period.temperature}*F</h1>
                           <p>{period.detailedForecast}</p>
                         </div>
